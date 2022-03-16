@@ -61,3 +61,13 @@ FROM (SELECT log.guild_id,
                         FROM repbot_schema.cleanup_schedule clean
                         WHERE clean.guild_id = log.guild_id
                           AND clean.user_id = log.user_id))) rank;
+
+CREATE TABLE repbot_schema.announcements
+(
+    guild_id     BIGINT
+        CONSTRAINT announcements_pk
+            PRIMARY KEY,
+    active       BOOLEAN DEFAULT FALSE NOT NULL,
+    same_channel BOOLEAN DEFAULT TRUE  NOT NULL,
+    channel_id   BIGINT
+);

@@ -2,6 +2,7 @@ package de.chojo.repbot.data;
 
 import de.chojo.jdautil.localization.util.Language;
 import de.chojo.repbot.data.wrapper.AbuseSettings;
+import de.chojo.repbot.data.wrapper.AnnouncementSettings;
 import de.chojo.repbot.data.wrapper.GeneralSettings;
 import de.chojo.repbot.data.wrapper.GuildSettings;
 import de.chojo.repbot.data.wrapper.MessageSettings;
@@ -49,12 +50,30 @@ public class GuildData extends QueryFactoryHolder {
         var messageSettings = getMessageSettings(guild);
         var abuseSettings = getAbuseSettings(guild);
         var thankSettings = getThankSettings(guild);
+        var announcementSettings = getAnnouncementSettings(guild);
 
         return new GuildSettings(guild,
                 generalSettings.join().orElse(new GeneralSettings()),
                 messageSettings.join().orElse(new MessageSettings()),
                 abuseSettings.join().orElse(new AbuseSettings()),
-                thankSettings.join().orElse(new ThankSettings()));
+                thankSettings.join().orElse(new ThankSettings()),
+                announcementSettings.join().orElse(new AnnouncementSettings()));
+    }
+
+    private CompletableFuture<Optional<AnnouncementSettings>> getAnnouncementSettings(Guild guild) {
+        return builder(AnnouncementSettings.class)
+                .query("""
+                        SELECT
+                            active,
+                            same_channel,
+                            channel_id
+                        FROM
+                            announcements
+                        WHERE guild_id = ?
+                        """)
+                .paramsBuilder(stmt -> stmt.setLong(guild.getIdLong()))
+                .readRow(this::buildAnnounceSettings)
+                .first();
     }
 
     private CompletableFuture<Optional<AbuseSettings>> getAbuseSettings(Guild guild) {
@@ -129,6 +148,10 @@ public class GuildData extends QueryFactoryHolder {
                 .paramsBuilder(stmt -> stmt.setLong(guild.getIdLong()))
                 .readRow(this::buildThankSettings)
                 .first();
+    }
+
+    private AnnouncementSettings buildAnnounceSettings(ResultSet rs) throws SQLException {
+        return new AnnouncementSettings(rs.getBoolean("active"), rs.getBoolean("same_channel"), rs.getLong("channel_id"));
     }
 
     private AbuseSettings buildAbuseSettings(ResultSet rs) throws SQLException {
@@ -452,6 +475,21 @@ public class GuildData extends QueryFactoryHolder {
                        .paramsBuilder(stmt -> stmt.setInt(update.maxMessageAge()).setInt(update.minMessages())
                                .setInt(update.cooldown()).setBoolean(update.isDonorContext())
                                .setBoolean(update.isReceiverContext()).setLong(guild.getIdLong()))
+                       .update().executeSync() > 0;
+    }
+
+    public boolean updateAnnouncementSettings(Guild guild, AnnouncementSettings update) {
+        return builder()
+                       .query("""
+                               UPDATE
+                                   announcements
+                               SET active = ?,
+                                   same_channel = ?,
+                                   channel_id = ?
+                               WHERE guild_id = ?;
+                               """)
+                       .paramsBuilder(stmt -> stmt.setBoolean(update.isActive()).setBoolean(update.isSameChannel())
+                               .setLong(update.channelId()).setLong(guild.getIdLong()))
                        .update().executeSync() > 0;
     }
 

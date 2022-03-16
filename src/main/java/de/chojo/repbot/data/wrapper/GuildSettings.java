@@ -8,16 +8,17 @@ public class GuildSettings {
     private final MessageSettings messageSettings;
     private final AbuseSettings abuseSettings;
     private final ThankSettings thankSettings;
+    private final AnnouncementSettings announcementSettings;
 
 
-    public GuildSettings(Guild guild, GeneralSettings generalSettings, MessageSettings messageSettings, AbuseSettings abuseSettings, ThankSettings thankSettings) {
+    public GuildSettings(Guild guild, GeneralSettings generalSettings, MessageSettings messageSettings, AbuseSettings abuseSettings, ThankSettings thankSettings, AnnouncementSettings announcementSettings) {
         this.guild = guild;
         this.generalSettings = generalSettings;
         this.messageSettings = messageSettings;
         this.abuseSettings = abuseSettings;
         this.thankSettings = thankSettings;
+        this.announcementSettings = announcementSettings;
     }
-
 
     public Guild guild() {
         return guild;
@@ -37,5 +38,9 @@ public class GuildSettings {
 
     public ThankSettings thankSettings() {
         return thankSettings;
+    }
+
+    public AnnouncementSettings announcementSettings() {
+        return announcementSettings;
     }
 }
